@@ -1,7 +1,7 @@
 
-
-var margin = { top: 20, right: 30, bottom: 30, left: 40 }
-var width = 700 - margin.left - margin.right
+// var fs = require("fs");
+var margin = { top: 20, right: 30, bottom: 60, left: 80 }
+var width = 780 - margin.left - margin.right
 var height = 500 - margin.top - margin.bottom
 var padding = .3;
 
@@ -75,60 +75,115 @@ var chart = d3.select(".chart")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 // d3.csvParse("name,value\nProduct Revenue,420000\nServices Revenue,210000\nFixed Costs,-170000\nVariable Costs,-140000", type, function(error, data) {
-
-d3.csv("seed.csv", type, function (error, data) {
-    // Transform data (i.e., finding cumulative values and total) for easier charting
-    var cumulative = 0;
-    for (var i = 0; i < data.length; i++) {
-        data[i].start = cumulative;
-        cumulative += data[i].value;
-        data[i].end = cumulative;
-
-        data[i].class = (data[i].value >= 0) ? 'positive' : 'negative'
+var data = document.getElementById("data").textContent
+dataArray = data.split("\n");
+columnsArray = dataArray[0].split(",");
+var DataPoint = function (lineData) {
+    rowArray = lineData.split(",");
+    this.name = rowArray[0];
+    this.value = rowArray[1];
+}
+var Value = function (catName, catVal) {
+    this.name = catName;
+    this.value = catVal;
+}
+parsedData = dataArray.map(val => new DataPoint(val))
+dataSet = new Set();
+parsedData.map(val => dataSet.add(val.name))
+keysArray = []
+cumulativeData = []
+dataSet.forEach(val => {
+    if (val != null) {
+        console.log(val.replace(/['"]+/g, " "))
+        let string = val.replace(/['"]+/g, " ").trim();
+        if (string.length > 0) {
+            keysArray.push(string);
+            cumulativeData.push(0);
+        }
     }
-    data.push({
-        name: 'Total',
-        end: cumulative,
-        start: 0,
-        class: 'total'
-    });
+})
+console.log(keysArray)
+dataArray.map((val, i) => {
+    if (i != 0) {
+        infoArr = val.split(",");
+        let j = keysArray.indexOf(infoArr[0].replace(/['"]+/g, " ").trim())
+        cumulativeData[j] += parseInt(infoArr[1]);
+    }
+})
+data = [];
+trueTotal = 0;
+for (i = 0; i < cumulativeData.length; i++) {
+    if (cumulativeData[i]) {
+        trueTotal += cumulativeData[i];
+        let total = cumulativeData[i]
+        if(i%2 == 0){
+            total *= -1;
+        }
+        data.push(new Value(keysArray[i], total))
+    }
+}
+data.unshift(new Value("Abs Value", trueTotal));
+keysArray.splice(0, 1)
+cumulativeData.splice(0, 1)
+data.map(val => console.log(val))
+// d3.csv("seed.csv", type, function (error, data) {
+// Transform data (i.e., finding cumulative values and total) for easier charting
+var cumulative = 0;
+for (var i = 0; i < data.length; i++) {
+    data[i].start = cumulative;
+    cumulative += data[i].value;
+    data[i].end = cumulative;
 
-    x.domain(data.map(function (d) { return d.name; }));
-    y.domain([0, d3.max(data, function (d) { return d.end; })]);
-
-    chart.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(xAxis);
-
-    chart.append("g")
-        .attr("class", "y axis")
-        .call(yAxis);
-
-    var bar = chart.selectAll(".bar")
-        .data(data)
-        .enter().append("g")
-        .attr("class", function (d) { return "bar " + d.class })
-        .attr("transform", function (d) { return "translate(" + x(d.name) + ",0)"; });
-
-    bar.append("rect")
-        .attr("y", function (d) { return y(Math.max(d.start, d.end)); })
-        .attr("height", function (d) { return Math.abs(y(d.start) - y(d.end)); })
-        .attr("width", x.rangeBand());
-
-    bar.append("text")
-        .attr("x", x.rangeBand() / 2)
-        .attr("y", function (d) { return y(d.end) + 5; })
-        .attr("dy", function (d) { return ((d.class == 'negative') ? '-' : '') + ".75em" })
-        .text(function (d) { return dollarFormatter(d.end - d.start); });
-
-    bar.filter(function (d) { return d.class != "total" }).append("line")
-        .attr("class", "connector")
-        .attr("x1", x.rangeBand() + 5)
-        .attr("y1", function (d) { return y(d.end) })
-        .attr("x2", x.rangeBand() / (1 - padding) - 5)
-        .attr("y2", function (d) { return y(d.end) })
+    data[i].class = (data[i].value >= 0) ? 'positive' : 'negative'
+}
+data.push({
+    name: 'Total',
+    end: cumulative,
+    start: 0,
+    class: 'total'
 });
+
+x.domain(data.map(function (d) { return d.name; }));
+y.domain([0, d3.max(data, function (d) { return d.end; })]);
+
+chart.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
+
+chart.append("h1")
+    .text("Sample Graph")
+
+chart.append("g")
+    .attr("class", "y axis")
+    .call(yAxis);
+
+var bar = chart.selectAll(".bar")
+    .data(data)
+    .enter().append("g")
+    .attr("class", function (d) { return "bar " + d.class })
+    .attr("transform", function (d) { return "translate(" + x(d.name) + ",0)"; });
+
+bar.append("rect")
+    .attr("y", function (d) { return y(Math.max(d.start, d.end)); })
+    .attr("height", function (d) { return Math.abs(y(d.start) - y(d.end)); })
+    .attr("width", x.rangeBand()+10);
+
+bar.append("text")
+    .attr("x", x.rangeBand() / 2)
+    .attr("y", function (d) { return y(d.end) + 5; })
+    .attr("dy", function (d) { return ((d.class == 'negative') ? '-' : '') + ".75em" })
+    .text(function (d) { return dollarFormatter(d.end - d.start); });
+
+bar.filter(function (d) { return d.class != "total" }).append("line")
+    .attr("class", "connector")
+    // .attr("x1", x.rangeBand() + 5)
+    .attr("x1", x.rangeBand()+10)
+    .attr("y1", function (d) { return y(d.end) })
+    // .attr("x2", x.rangeBand() / (1 - padding) - 5)
+    .attr("x2", x.rangeBand() / (1 - padding))
+    .attr("y2", function (d) { return y(d.end) })
+// });
 
 function type(d) {
     d.value = +d.value;

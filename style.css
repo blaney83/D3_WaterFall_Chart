@@ -1,3 +1,7 @@
+body{
+    background-color: lightslategrey;
+}
+
 .bar.total rect {
     fill:  darkblue;
   }
@@ -10,8 +14,9 @@
   }
   
   .bar line.connector {
-    stroke: grey;
-    stroke-dasharray: 1;
+    stroke: white;
+    stroke-dasharray: 100000;
+    stroke-width: 1px;
   }
   
   .bar text {
@@ -21,7 +26,15 @@
   }
   
   .axis text {
-    font: 10px sans-serif;
+    font: 14px sans-serif;
+    color: white !important;
+   position: relative;
+   top: 30;
+  }
+  .y text {
+    font: 14px sans-serif;
+    color: white !important;
+   transform: rotate(-45deg);
   }
   
   .axis path,
