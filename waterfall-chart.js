@@ -3,6 +3,8 @@ const margin = { top: 20, right: 30, bottom: 60, left: 80 }
 const width = 780 - margin.left - margin.right
 const height = 500 - margin.top - margin.bottom
 const padding = .3;
+//settings for ordering of data bins
+const absValueBinOrder = true;
 
 const x = d3.scale.ordinal()
     .rangeRoundBands([0, width], padding);
@@ -70,6 +72,23 @@ for (i = 0; i < cumulativeData.length; i++) {
             total *= -1;
         }
         data.push(new Value(keysArray[i], total))
+    }
+}
+//optional bin sorting by positive and negative bin grouping
+if(absValueBinOrder){
+    for(i=0;i<data.length; i++){
+        let count = 0;
+        for(n=0; n<data.length-i-1; n++){
+            if(data[n].value < data[n+1].value){
+                let hold = data[n];
+                data[n] = data[n+1];
+                data[n+1] = hold;
+                count = 1;
+            }
+        }
+        if(count ==0){
+            break;
+        }
     }
 }
 data.unshift(new Value("Abs Value", trueTotal));
