@@ -5,6 +5,8 @@ const height = 500 - margin.top - margin.bottom
 const padding = .3;
 //settings for ordering of data bins
 const absValueBinOrder = true;
+//settings for nominal bin ordering
+const nominalBinOrder = false;
 
 const x = d3.scale.ordinal()
     .rangeRoundBands([0, width], padding);
@@ -64,6 +66,7 @@ dataArray.map((val, i) => {
 })
 data = [];
 trueTotal = 0;
+//cumulative calculator; includes a randomizing negative value generator (which should be removed for real data sets)
 for (i = 0; i < cumulativeData.length; i++) {
     if (cumulativeData[i]) {
         trueTotal += cumulativeData[i];
@@ -80,6 +83,23 @@ if(absValueBinOrder){
         let count = 0;
         for(n=0; n<data.length-i-1; n++){
             if(data[n].value < data[n+1].value){
+                let hold = data[n];
+                data[n] = data[n+1];
+                data[n+1] = hold;
+                count = 1;
+            }
+        }
+        if(count ==0){
+            break;
+        }
+    }
+}
+//optional bin sorting by positive and negative bin grouping
+if(nominalBinOrder){
+    for(i=0;i<data.length; i++){
+        let count = 0;
+        for(n=0; n<data.length-i-1; n++){
+            if(data[n].name < data[n+1].name){
                 let hold = data[n];
                 data[n] = data[n+1];
                 data[n+1] = hold;
